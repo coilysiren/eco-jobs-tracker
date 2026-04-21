@@ -37,6 +37,7 @@ TEMPLATES = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 # Read once at module import; the bytes are tiny.
 TEMPLATES.env.globals["eco_mcp_css"] = status_css()
 TEMPLATES.env.globals["livereload_script"] = LIVERELOAD_SCRIPT if DEBUG else ""
+TEMPLATES.env.globals["using_mock_data"] = upstream.UPSTREAM_URL is None
 
 app = FastAPI(title="eco-jobs-tracker", version="0.1.0")
 
