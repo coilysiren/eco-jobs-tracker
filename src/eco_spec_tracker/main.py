@@ -56,9 +56,7 @@ def partial_profession_detail(request: Request, name: str) -> HTMLResponse:
 
 @app.get("/players", response_class=HTMLResponse)
 def players_page(request: Request) -> HTMLResponse:
-    return TEMPLATES.TemplateResponse(
-        request, "players.html", {"players": mock_data.players()}
-    )
+    return TEMPLATES.TemplateResponse(request, "players.html", {"players": mock_data.players()})
 
 
 # --- JSON API (machine-readable mirror of the mock data) ---

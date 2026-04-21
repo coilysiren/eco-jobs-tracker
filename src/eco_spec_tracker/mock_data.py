@@ -36,36 +36,36 @@ PROFESSION_SPECIALTIES: dict[str, list[str]] = {
 
 
 _MOCK_ROWS: list[PlayerSpecialty] = [
-    PlayerSpecialty("coilysiren",     "Basic Carpentry",     5, True),
-    PlayerSpecialty("coilysiren",     "Advanced Carpentry",  3, True),
-    PlayerSpecialty("coilysiren",     "Furniture Making",    2, True),
-    PlayerSpecialty("ekans",          "Basic Carpentry",     4, True),
-    PlayerSpecialty("ekans",          "Lumber",              1, True),
-    PlayerSpecialty("ekans",          "Mining",              6, True),
-    PlayerSpecialty("redwood",        "Glassworking",        5, False),
-    PlayerSpecialty("redwood",        "Basic Masonry",       2, False),
-    PlayerSpecialty("redwood",        "Pottery",             3, False),
-    PlayerSpecialty("salt",           "Campfire Cooking",    4, True),
-    PlayerSpecialty("salt",           "Baking",              2, True),
-    PlayerSpecialty("salt",           "Farming",             5, True),
-    PlayerSpecialty("salt",           "Gardening",           3, True),
-    PlayerSpecialty("quill",          "Paper Milling",       4, True),
-    PlayerSpecialty("quill",          "Printing",            2, True),
-    PlayerSpecialty("hammerhand",     "Basic Masonry",       5, True),
-    PlayerSpecialty("hammerhand",     "Brick Making",        4, True),
-    PlayerSpecialty("hammerhand",     "Advanced Masonry",    3, True),
-    PlayerSpecialty("voltaic",        "Mechanics",           5, False),
-    PlayerSpecialty("voltaic",        "Electronics",         4, False),
-    PlayerSpecialty("voltaic",        "Industry",            2, False),
-    PlayerSpecialty("fernweh",        "Farming",             3, True),
-    PlayerSpecialty("fernweh",        "Fertilizers",         2, True),
-    PlayerSpecialty("fernweh",        "Hunting",             4, True),
-    PlayerSpecialty("fernweh",        "Butchery",            3, True),
-    PlayerSpecialty("ore-ge",         "Basic Smelting",      5, True),
-    PlayerSpecialty("ore-ge",         "Advanced Smelting",   3, True),
-    PlayerSpecialty("ore-ge",         "Alloys",              2, True),
-    PlayerSpecialty("tinkerbell",     "Tailoring",           4, False),
-    PlayerSpecialty("tinkerbell",     "Advanced Tailoring",  2, False),
+    PlayerSpecialty("coilysiren", "Basic Carpentry", 5, True),
+    PlayerSpecialty("coilysiren", "Advanced Carpentry", 3, True),
+    PlayerSpecialty("coilysiren", "Furniture Making", 2, True),
+    PlayerSpecialty("ekans", "Basic Carpentry", 4, True),
+    PlayerSpecialty("ekans", "Lumber", 1, True),
+    PlayerSpecialty("ekans", "Mining", 6, True),
+    PlayerSpecialty("redwood", "Glassworking", 5, False),
+    PlayerSpecialty("redwood", "Basic Masonry", 2, False),
+    PlayerSpecialty("redwood", "Pottery", 3, False),
+    PlayerSpecialty("salt", "Campfire Cooking", 4, True),
+    PlayerSpecialty("salt", "Baking", 2, True),
+    PlayerSpecialty("salt", "Farming", 5, True),
+    PlayerSpecialty("salt", "Gardening", 3, True),
+    PlayerSpecialty("quill", "Paper Milling", 4, True),
+    PlayerSpecialty("quill", "Printing", 2, True),
+    PlayerSpecialty("hammerhand", "Basic Masonry", 5, True),
+    PlayerSpecialty("hammerhand", "Brick Making", 4, True),
+    PlayerSpecialty("hammerhand", "Advanced Masonry", 3, True),
+    PlayerSpecialty("voltaic", "Mechanics", 5, False),
+    PlayerSpecialty("voltaic", "Electronics", 4, False),
+    PlayerSpecialty("voltaic", "Industry", 2, False),
+    PlayerSpecialty("fernweh", "Farming", 3, True),
+    PlayerSpecialty("fernweh", "Fertilizers", 2, True),
+    PlayerSpecialty("fernweh", "Hunting", 4, True),
+    PlayerSpecialty("fernweh", "Butchery", 3, True),
+    PlayerSpecialty("ore-ge", "Basic Smelting", 5, True),
+    PlayerSpecialty("ore-ge", "Advanced Smelting", 3, True),
+    PlayerSpecialty("ore-ge", "Alloys", 2, True),
+    PlayerSpecialty("tinkerbell", "Tailoring", 4, False),
+    PlayerSpecialty("tinkerbell", "Advanced Tailoring", 2, False),
 ]
 
 
@@ -82,7 +82,7 @@ class ProfessionStat:
 
 
 def profession_stats() -> list[ProfessionStat]:
-    """For each profession: active (players with >=1 active learned specialty) / total (players with any learned specialty)."""
+    """Per-profession counts: active (>=1 active learned specialty) / total (any learned)."""
     stats: list[ProfessionStat] = []
     for profession, specialties in PROFESSION_SPECIALTIES.items():
         specialty_set = set(specialties)

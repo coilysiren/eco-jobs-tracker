@@ -6,6 +6,8 @@
     <Nullable>enable</Nullable>
     <AssemblyName>EcoJobsTracker</AssemblyName>
     <RootNamespace>EcoJobsTracker</RootNamespace>
+    <!-- CA1416: ModKit types are flagged Windows-only, but the Eco server runs on Linux via .NET. Noise. -->
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
