@@ -20,7 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.responses import Response
 
-from eco_spec_tracker import mock_data
+from eco_spec_tracker import mock_data, upstream
 from eco_spec_tracker.livereload import DEBUG, LIVERELOAD_SCRIPT
 from eco_spec_tracker.livereload import router as livereload_router
 
@@ -64,57 +64,63 @@ async def partial_eco_card() -> HTMLResponse:
 
 
 @app.get("/", response_class=HTMLResponse)
-def index(request: Request) -> HTMLResponse:
+async def index(request: Request) -> HTMLResponse:
     """Homepage: live eco card + all three content sections stacked."""
+    rows = await upstream.fetch_rows()
     return TEMPLATES.TemplateResponse(
         request,
         "index.html",
         {
-            "stats": mock_data.profession_stats(),
-            "specialties": mock_data.specialties(),
-            "players": mock_data.players(),
+            "stats": mock_data.profession_stats(rows),
+            "specialties": mock_data.specialties(rows),
+            "players": mock_data.players(rows),
         },
     )
 
 
 @app.get("/professions", response_class=HTMLResponse)
-def professions_page(request: Request) -> HTMLResponse:
+async def professions_page(request: Request) -> HTMLResponse:
     """Just the Professions section, no eco card."""
+    rows = await upstream.fetch_rows()
     return TEMPLATES.TemplateResponse(
-        request, "professions.html", {"stats": mock_data.profession_stats()}
+        request, "professions.html", {"stats": mock_data.profession_stats(rows)}
     )
 
 
 @app.get("/specialties", response_class=HTMLResponse)
-def specialties_page(request: Request) -> HTMLResponse:
+async def specialties_page(request: Request) -> HTMLResponse:
     """Just the Specialties section, no eco card."""
+    rows = await upstream.fetch_rows()
     return TEMPLATES.TemplateResponse(
-        request, "specialties.html", {"specialties": mock_data.specialties()}
+        request, "specialties.html", {"specialties": mock_data.specialties(rows)}
     )
 
 
 @app.get("/players", response_class=HTMLResponse)
-def players_page(request: Request) -> HTMLResponse:
+async def players_page(request: Request) -> HTMLResponse:
     """Just the Players section, no eco card."""
-    return TEMPLATES.TemplateResponse(request, "players.html", {"players": mock_data.players()})
+    rows = await upstream.fetch_rows()
+    return TEMPLATES.TemplateResponse(request, "players.html", {"players": mock_data.players(rows)})
 
 
 @app.get("/partials/profession/{name}", response_class=HTMLResponse)
-def partial_profession_detail(request: Request, name: str) -> HTMLResponse:
+async def partial_profession_detail(request: Request, name: str) -> HTMLResponse:
     """HTMX partial: expand a profession to see its players."""
-    stats = {s.profession: s for s in mock_data.profession_stats()}
+    rows = await upstream.fetch_rows()
+    stats = {s.profession: s for s in mock_data.profession_stats(rows)}
     stat = stats.get(name)
     if stat is None:
         return HTMLResponse(f"<p>Unknown profession: {name}</p>", status_code=404)
     return TEMPLATES.TemplateResponse(request, "_profession_detail.html", {"stat": stat})
 
 
-# --- JSON API (machine-readable mirror of the mock data) ---
+# --- JSON API (machine-readable mirror of the live data) ---
 
 
 @app.get("/api/v1/professions")
-def api_professions() -> JSONResponse:
-    stats = mock_data.profession_stats()
+async def api_professions() -> JSONResponse:
+    rows = await upstream.fetch_rows()
+    stats = mock_data.profession_stats(rows)
     return JSONResponse(
         [
             {"profession": s.profession, "active": s.active, "total": s.total, "players": s.players}
@@ -124,7 +130,8 @@ def api_professions() -> JSONResponse:
 
 
 @app.get("/api/v1/players")
-def api_players() -> JSONResponse:
+async def api_players() -> JSONResponse:
+    rows = await upstream.fetch_rows()
     return JSONResponse(
         [
             {
@@ -135,13 +142,14 @@ def api_players() -> JSONResponse:
                     for s in p.specialties
                 ],
             }
-            for p in mock_data.players()
+            for p in mock_data.players(rows)
         ]
     )
 
 
 @app.get("/api/v1/specialties")
-def api_specialties() -> JSONResponse:
+async def api_specialties() -> JSONResponse:
+    rows = await upstream.fetch_rows()
     return JSONResponse(
         [
             {
@@ -153,6 +161,6 @@ def api_specialties() -> JSONResponse:
                     {"player": h.player, "level": h.level, "active": h.active} for h in s.holders
                 ],
             }
-            for s in mock_data.specialties()
+            for s in mock_data.specialties(rows)
         ]
     )

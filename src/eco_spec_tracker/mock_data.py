@@ -81,14 +81,15 @@ class ProfessionStat:
     players: list[str]
 
 
-def profession_stats() -> list[ProfessionStat]:
+def profession_stats(rows: list[PlayerSpecialty] | None = None) -> list[ProfessionStat]:
     """Per-profession counts: active (>=1 active learned specialty) / total (any learned)."""
+    source = _MOCK_ROWS if rows is None else rows
     stats: list[ProfessionStat] = []
     for profession, specialties in PROFESSION_SPECIALTIES.items():
         specialty_set = set(specialties)
-        rows = [r for r in _MOCK_ROWS if r.specialty in specialty_set]
-        players_all = {r.player for r in rows}
-        players_active = {r.player for r in rows if r.active}
+        scoped = [r for r in source if r.specialty in specialty_set]
+        players_all = {r.player for r in scoped}
+        players_active = {r.player for r in scoped if r.active}
         stats.append(
             ProfessionStat(
                 profession=profession,
@@ -108,9 +109,10 @@ class PlayerView:
     specialties: list[PlayerSpecialty]
 
 
-def players() -> list[PlayerView]:
+def players(rows: list[PlayerSpecialty] | None = None) -> list[PlayerView]:
+    source = _MOCK_ROWS if rows is None else rows
     by_player: dict[str, list[PlayerSpecialty]] = {}
-    for r in _MOCK_ROWS:
+    for r in source:
         by_player.setdefault(r.player, []).append(r)
     out: list[PlayerView] = []
     for name, rows in by_player.items():
@@ -145,11 +147,12 @@ def _specialty_to_profession() -> dict[str, str]:
     return {s: prof for prof, specs in PROFESSION_SPECIALTIES.items() for s in specs}
 
 
-def specialties() -> list[SpecialtyView]:
+def specialties(rows: list[PlayerSpecialty] | None = None) -> list[SpecialtyView]:
     """The inverse of players(): per specialty, who holds it and at what level."""
+    source = _MOCK_ROWS if rows is None else rows
     prof_of = _specialty_to_profession()
     by_spec: dict[str, list[PlayerSpecialty]] = {}
-    for r in _MOCK_ROWS:
+    for r in source:
         by_spec.setdefault(r.specialty, []).append(r)
     out: list[SpecialtyView] = []
     for spec, rows in by_spec.items():
