@@ -18,10 +18,16 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.responses import Response
 
 from eco_spec_tracker import mock_data
 from eco_spec_tracker.livereload import DEBUG, LIVERELOAD_SCRIPT
 from eco_spec_tracker.livereload import router as livereload_router
+
+# Allow coilysiren.me to embed this app in an iframe (eco-modding page).
+# Modern browsers honor frame-ancestors and ignore X-Frame-Options when both
+# are present — keep X-Frame-Options unset everywhere (app + ingress).
+FRAME_ANCESTORS_CSP = "frame-ancestors 'self' https://www.coilysiren.me https://coilysiren.me"
 
 BASE_DIR = Path(__file__).resolve().parent
 TEMPLATES = Jinja2Templates(directory=str(BASE_DIR / "templates"))
@@ -32,6 +38,15 @@ TEMPLATES.env.globals["eco_mcp_css"] = status_css()
 TEMPLATES.env.globals["livereload_script"] = LIVERELOAD_SCRIPT if DEBUG else ""
 
 app = FastAPI(title="eco-jobs-tracker", version="0.1.0")
+
+
+@app.middleware("http")
+async def add_frame_ancestors_csp(request: Request, call_next) -> Response:
+    response = await call_next(request)
+    response.headers["Content-Security-Policy"] = FRAME_ANCESTORS_CSP
+    return response
+
+
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 if DEBUG:
     app.include_router(livereload_router)
