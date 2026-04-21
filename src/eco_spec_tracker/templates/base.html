@@ -1,26 +1,47 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}eco-jobs-tracker{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            accent: {
+              DEFAULT: '#7ec27e',
+              dim: '#4f7a4f',
+            },
+          },
+          fontFamily: {
+            sans: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
   <script src="https://unpkg.com/htmx.org@2.0.3"></script>
-  <link rel="stylesheet" href="/static/app.css">
 </head>
-<body>
-  <header class="topbar">
-    <h1><a href="/">eco-jobs-tracker</a></h1>
-    <nav>
-      <a href="/">Professions</a>
-      <a href="/players">Players</a>
-      <a href="/api/v1/professions">JSON</a>
+<body class="min-h-full font-sans antialiased">
+  <header class="flex items-center justify-between border-b border-slate-800 bg-slate-900 px-6 py-3">
+    <h1 class="m-0 text-lg font-semibold tracking-wide">
+      <a href="/" class="text-slate-100 hover:text-accent">eco-jobs-tracker</a>
+    </h1>
+    <nav class="flex gap-4 text-sm">
+      <a href="/" class="text-accent hover:underline">Professions</a>
+      <a href="/players" class="text-accent hover:underline">Players</a>
+      <a href="/api/v1/professions" class="text-accent hover:underline">JSON</a>
     </nav>
   </header>
-  <main>
+
+  <main class="mx-auto max-w-6xl px-6 py-6">
     {% block content %}{% endblock %}
   </main>
-  <footer>
-    <small>mock data — will be replaced by Eco mod live feed</small>
+
+  <footer class="py-6 text-center text-xs text-slate-500">
+    mock data — will be replaced by Eco mod live feed
   </footer>
 </body>
 </html>

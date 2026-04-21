@@ -1,16 +1,16 @@
-<ul class="profession-grid">
+<ul class="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3 p-0">
   {% for s in stats %}
-    <li class="profession-card {% if s.total == 0 %}empty{% endif %}">
+    <li class="overflow-hidden rounded-md border border-slate-800 bg-slate-900 {% if s.total == 0 %}opacity-40{% endif %}">
       <button
-        class="profession-header"
+        class="flex w-full cursor-pointer items-center justify-between border-0 bg-transparent px-4 py-3 text-left text-slate-100 hover:bg-slate-800"
         hx-get="/partials/profession/{{ s.profession }}"
         hx-target="#detail-{{ loop.index }}"
         hx-swap="innerHTML"
       >
-        <span class="name">{{ s.profession }}</span>
-        <span class="count">( {{ s.active }} / {{ s.total }} )</span>
+        <span class="font-medium">{{ s.profession }}</span>
+        <span class="tabular-nums text-accent">( {{ s.active }} / {{ s.total }} )</span>
       </button>
-      <div id="detail-{{ loop.index }}" class="profession-detail"></div>
+      <div id="detail-{{ loop.index }}" class="empty:hidden border-t border-slate-800 px-4 pb-3"></div>
     </li>
   {% endfor %}
 </ul>

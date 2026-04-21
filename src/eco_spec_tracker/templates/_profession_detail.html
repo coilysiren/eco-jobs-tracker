@@ -1,9 +1,9 @@
 {% if stat.players %}
-  <ul class="player-list">
+  <ul class="m-0 list-none p-0 pt-2">
     {% for p in stat.players %}
-      <li>{{ p }}</li>
+      <li class="border-b border-dotted border-slate-800 py-1 text-sm last:border-0">{{ p }}</li>
     {% endfor %}
   </ul>
 {% else %}
-  <p class="muted">No players with specialties in this profession.</p>
+  <p class="text-xs text-slate-500">No players with specialties in this profession.</p>
 {% endif %}
