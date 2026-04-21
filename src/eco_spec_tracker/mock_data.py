@@ -123,3 +123,48 @@ def players() -> list[PlayerView]:
         )
     out.sort(key=lambda p: (not p.active, p.name))
     return out
+
+
+@dataclass(frozen=True)
+class SpecialtyHolder:
+    player: str
+    level: int
+    active: bool
+
+
+@dataclass(frozen=True)
+class SpecialtyView:
+    name: str
+    profession: str
+    active: int  # holders flagged active
+    total: int
+    holders: list[SpecialtyHolder]  # sorted: active first, then level desc
+
+
+def _specialty_to_profession() -> dict[str, str]:
+    return {s: prof for prof, specs in PROFESSION_SPECIALTIES.items() for s in specs}
+
+
+def specialties() -> list[SpecialtyView]:
+    """The inverse of players(): per specialty, who holds it and at what level."""
+    prof_of = _specialty_to_profession()
+    by_spec: dict[str, list[PlayerSpecialty]] = {}
+    for r in _MOCK_ROWS:
+        by_spec.setdefault(r.specialty, []).append(r)
+    out: list[SpecialtyView] = []
+    for spec, rows in by_spec.items():
+        holders = sorted(
+            (SpecialtyHolder(r.player, r.level, r.active) for r in rows),
+            key=lambda h: (not h.active, -h.level, h.player),
+        )
+        out.append(
+            SpecialtyView(
+                name=spec,
+                profession=prof_of.get(spec, "Other"),
+                active=sum(1 for h in holders if h.active),
+                total=len(holders),
+                holders=holders,
+            )
+        )
+    out.sort(key=lambda s: (s.profession, s.name))
+    return out

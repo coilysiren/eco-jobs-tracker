@@ -109,3 +109,21 @@ def api_players() -> JSONResponse:
             for p in mock_data.players()
         ]
     )
+
+
+@app.get("/api/v1/specialties")
+def api_specialties() -> JSONResponse:
+    return JSONResponse(
+        [
+            {
+                "specialty": s.name,
+                "profession": s.profession,
+                "active": s.active,
+                "total": s.total,
+                "holders": [
+                    {"player": h.player, "level": h.level, "active": h.active} for h in s.holders
+                ],
+            }
+            for s in mock_data.specialties()
+        ]
+    )
