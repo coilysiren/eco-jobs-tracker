@@ -5,6 +5,4 @@ __pycache__/
 .ruff_cache/
 .pytest_cache/
 .build
-requirements.txt
-uv.lock
 .DS_Store

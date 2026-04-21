@@ -11,6 +11,7 @@ in lockstep with whatever eco-mcp-app ships.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from eco_mcp_app import render_status_html, status_css
@@ -57,10 +58,18 @@ def healthz() -> JSONResponse:
     return JSONResponse({"ok": True})
 
 
+# eco-mcp-app's card.html bakes in a "Try this card on another public Eco
+# server" pill strip that makes sense in its own /preview UI but not here —
+# we're a jobs tracker for one specific server, not a card-renderer. Strip
+# the block out of the rendered HTML.
+_TRY_OTHERS_RE = re.compile(r'<div class="try-others">.*?</div>\s*</div>', flags=re.DOTALL)
+
+
 @app.get("/partials/eco-card", response_class=HTMLResponse)
 async def partial_eco_card() -> HTMLResponse:
     """Live Eco server status card, rendered by eco-mcp-app."""
-    return HTMLResponse(await render_status_html())
+    html = await render_status_html()
+    return HTMLResponse(_TRY_OTHERS_RE.sub("", html))
 
 
 @app.get("/", response_class=HTMLResponse)
