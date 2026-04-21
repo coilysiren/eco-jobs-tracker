@@ -41,12 +41,17 @@ jobs:
     needs: build-publish
     steps:
       - uses: actions/checkout@v4
+      # The action brings tailscale up with tag:ci + our accept flags. We used
+      # to run a redundant `sudo tailscale up` afterward, copied from the
+      # backend template; it hangs under the current tailnet ACL because
+      # re-up without an authkey tries to reauth interactively.
       - uses: tailscale/github-action@v3
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:ci
-      - run: sudo tailscale up --accept-dns --accept-routes --advertise-tags=tag:ci --hostname=github-actions
+          args: --accept-dns --accept-routes
+          hostname: github-actions-${{ github.run_id }}
       - name: kubectl
         run: |
           curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
