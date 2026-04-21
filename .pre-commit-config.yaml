@@ -19,8 +19,26 @@ repos:
     hooks:
       - id: dotnet-format
         name: dotnet format (C#)
-        description: Format C# files in mod/ via the dotnet SDK.
+        description: Apply whitespace, style, and analyzer fixes to changed C# files.
         entry: dotnet format mod/eco-jobs-tracker.sln --include
         language: system
         files: ^mod/.*\.cs$
+        require_serial: true
+
+      - id: dotnet-format-verify
+        name: dotnet format --verify-no-changes (C#)
+        description: Fail if any C# file would still change after formatting (belt-and-suspenders for the auto-fix hook).
+        entry: dotnet format mod/eco-jobs-tracker.sln --verify-no-changes --no-restore
+        language: system
+        files: ^mod/.*\.cs$
+        pass_filenames: false
+        require_serial: true
+
+      - id: dotnet-build
+        name: dotnet build (C#)
+        description: Compile the mod solution so broken C# can't be committed.
+        entry: dotnet build mod/eco-jobs-tracker.sln -c Debug --nologo -v quiet
+        language: system
+        files: ^mod/.*\.(cs|csproj|sln)$
+        pass_filenames: false
         require_serial: true
