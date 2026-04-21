@@ -20,6 +20,16 @@ spec:
       labels:
         app: ${NAME}-app
     spec:
+      # Resolve eco.coilysiren.me to kai-server's LAN IP from inside the pod.
+      # Going out through the public DNS would require hairpin NAT on the
+      # home router, which it doesn't support (same limitation that forced
+      # cert-manager onto DNS-01 — see kai-server README). Hardcoded IP is
+      # fine: single-node k3s, stable home LAN, same IP cert-manager uses.
+      # eco-mcp-app applies the same fix; see its 1a885eac commit.
+      hostAliases:
+        - ip: "192.168.0.194"
+          hostnames:
+            - "eco.coilysiren.me"
       containers:
         - name: ${NAME}
           image: ${IMAGE}

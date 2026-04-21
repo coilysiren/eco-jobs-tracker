@@ -52,6 +52,18 @@ publish: build-docker .publish
 		IMAGE=$(image-url) \
 		envsubst < deploy/main.yml | kubectl apply -f -
 
+# Stream the rendered manifest over tailscale SSH and apply on kai-server.
+# Avoids needing the k3s API reachable from CI — kai-server's own kubectl
+# is the path that actually works today (the API only binds to localhost).
+.deploy-ssh:
+	env \
+		NAME=$(name-dashed) \
+		DNS_NAME=$(dns-name) \
+		IMAGE=$(image-url) \
+		envsubst < deploy/main.yml | \
+		ssh -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=/dev/null kai@kai-server \
+			'kubectl --kubeconfig=/home/kai/.kube/config apply -f -'
+
 ## deploy the application to the cluster
 deploy: publish .deploy
 
