@@ -42,3 +42,11 @@ repos:
         files: ^mod/.*\.(cs|csproj|sln)$
         pass_filenames: false
         require_serial: true
+
+      - id: trufflehog
+        name: trufflehog (secret scan)
+        description: Detect secrets in staged changes using local trufflehog binary.
+        entry: trufflehog git file://. --since-commit HEAD --results=verified,unknown --fail --no-update
+        language: system
+        pass_filenames: false
+        stages: [pre-commit, pre-push]
