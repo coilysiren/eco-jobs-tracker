@@ -2,12 +2,26 @@
 
 Serves a Jinja2 + HTMX UI plus a JSON API. Currently backed by mock data;
 will eventually call the Eco mod's `/api/v1/skills` endpoint.
+
+The top of every HTML page embeds the live Eco server status card from
+`eco-mcp-app` (sister repo, installed as a git dep). The card and its CSS
+are imported directly — we ride the same rendering path so visuals stay
+in lockstep with whatever eco-mcp-app ships.
 """
 
 from __future__ import annotations
 
+from importlib.resources import files as pkg_files
 from pathlib import Path
 
+import httpx
+from eco_mcp_app.server import (
+    _render_card,
+    _render_error,
+    fetch_eco_info,
+    redact,
+    to_payload,
+)
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -18,6 +32,11 @@ from eco_spec_tracker import mock_data
 BASE_DIR = Path(__file__).resolve().parent
 TEMPLATES = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
+# Pull eco-mcp-app's CSS from the installed package and splice it into our
+# base template via context. Read once at module import; the bytes are tiny.
+ECO_MCP_CSS = pkg_files("eco_mcp_app.templates").joinpath("eco.css").read_text()
+TEMPLATES.env.globals["eco_mcp_css"] = ECO_MCP_CSS
+
 app = FastAPI(title="eco-jobs-tracker", version="0.1.0")
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
@@ -25,6 +44,16 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="stat
 @app.get("/healthz")
 def healthz() -> JSONResponse:
     return JSONResponse({"ok": True})
+
+
+@app.get("/partials/eco-card", response_class=HTMLResponse)
+async def partial_eco_card() -> HTMLResponse:
+    """Live Eco server status card, rendered by eco-mcp-app's Jinja2 templates."""
+    try:
+        info = await fetch_eco_info()
+    except httpx.HTTPError as e:
+        return HTMLResponse(_render_error(str(e)))
+    return HTMLResponse(_render_card(to_payload(redact(info))))
 
 
 @app.get("/", response_class=HTMLResponse)

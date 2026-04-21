@@ -10,10 +10,7 @@
       theme: {
         extend: {
           colors: {
-            accent: {
-              DEFAULT: '#7ec27e',
-              dim: '#4f7a4f',
-            },
+            accent: { DEFAULT: '#7ec27e', dim: '#4f7a4f' },
           },
           fontFamily: {
             sans: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
@@ -22,6 +19,7 @@
       },
     };
   </script>
+  <style>{{ eco_mcp_css | safe }}</style>
   <script src="https://unpkg.com/htmx.org@2.0.3"></script>
 </head>
 <body class="min-h-full font-sans antialiased">
@@ -37,11 +35,25 @@
   </header>
 
   <main class="mx-auto max-w-6xl px-6 py-6">
+    <!--
+      Live Eco server status card (banner + meteor countdown + player/world
+      stats). Rendered by eco-mcp-app's Jinja2 templates, lazy-loaded via HTMX
+      so our first paint isn't blocked on the upstream /info fetch.
+    -->
+    <section
+      class="shell eco-mcp-card mb-8"
+      hx-get="/partials/eco-card"
+      hx-trigger="load"
+      hx-swap="innerHTML"
+    >
+      <p class="text-sm text-slate-400">Loading Eco server status…</p>
+    </section>
+
     {% block content %}{% endblock %}
   </main>
 
   <footer class="py-6 text-center text-xs text-slate-500">
-    mock data — will be replaced by Eco mod live feed
+    jobs data is mock; Eco server card above is live via eco-mcp-app
   </footer>
 </body>
 </html>

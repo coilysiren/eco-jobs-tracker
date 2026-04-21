@@ -11,10 +11,14 @@ dependencies = [
   "uvicorn[standard]>=0.30.0",
   "jinja2>=3.1.0",
   "httpx>=0.28.0",
+  "eco-mcp-app",
 ]
 
 [tool.uv]
 managed = true
+
+[tool.uv.sources]
+eco-mcp-app = { git = "https://github.com/coilysiren/eco-mcp-app.git", rev = "de5d89956eec7912da846af1cee5340feb4a7569" }
 
 [build-system]
 requires = ["hatchling"]
