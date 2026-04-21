@@ -5,6 +5,7 @@ DEFAULT_GOAL := help
 dns-name ?= $(shell cat config.yml | yq e '.dns-name')
 email ?= $(shell cat config.yml | yq e '.email')
 name ?= $(shell cat config.yml | yq e '.name')
+port ?= $(shell cat config.yml | yq e '.port')
 name-dashed ?= $(subst /,-,$(name))
 git-hash ?= $(shell git rev-parse HEAD 2>/dev/null || echo dev)
 image-url ?= ghcr.io/$(name)/$(name-dashed):$(git-hash)
@@ -56,11 +57,11 @@ deploy: publish .deploy
 
 ## run the FastAPI server locally with autoreload
 run-native:
-	uv run uvicorn eco_spec_tracker.main:app --reload --reload-dir src --port 4100 --host 0.0.0.0
+	uv run uvicorn eco_spec_tracker.main:app --reload --reload-dir src --port $(port) --host 0.0.0.0
 
 ## run the app inside a docker container
 run-docker:
-	docker run --expose 4000 -p 4000:4000 -it --rm $(name):latest
+	docker run -e PORT=$(port) -p $(port):$(port) -it --rm $(name):latest
 
 ## run the C# shell harness on :5100 (same API shape as the real Eco mod)
 run-shell:

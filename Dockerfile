@@ -10,7 +10,7 @@ RUN uv pip install --system -r requirements.txt
 COPY . /app
 RUN uv pip install --system --no-deps .
 
-ENV PORT=4000
+ENV PORT=4100
 EXPOSE $PORT
 
 CMD ["sh", "-c", "python -m uvicorn eco_spec_tracker.main:app --host 0.0.0.0 --port $PORT"]
