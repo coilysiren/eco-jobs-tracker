@@ -1,0 +1,71 @@
+name: build-publish-deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGE_REPO: ghcr.io/${{ github.repository }}/coilysiren-eco-spec-tracker
+      GIT_SHA: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - run: name=coilysiren-eco-spec-tracker make .build-docker
+      - name: tag and push
+        run: |
+          docker tag "coilysiren-eco-spec-tracker:latest" "${IMAGE_REPO}:${GIT_SHA}"
+          docker push "${IMAGE_REPO}:${GIT_SHA}"
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-publish
+    env:
+      K8S_SERVER: ${{ secrets.K8S_SERVER }}
+      K8S_CA_DATA: ${{ secrets.K8S_CA_DATA }}
+      K8S_CLIENT_CERT_DATA: ${{ secrets.K8S_CLIENT_CERT_DATA }}
+      K8S_CLIENT_KEY_DATA: ${{ secrets.K8S_CLIENT_KEY_DATA }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: tailscale/github-action@v3
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+      - run: sudo tailscale up --accept-dns --accept-routes --advertise-tags=tag:ci --hostname=github-actions
+      - name: install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+      - name: write kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          python3 - <<'PY' > ~/.kube/config
+          import os, yaml
+          print(yaml.safe_dump({
+              "apiVersion": "v1",
+              "kind": "Config",
+              "clusters": [{"name": "default", "cluster": {
+                  "server": os.environ["K8S_SERVER"],
+                  "certificate-authority-data": os.environ["K8S_CA_DATA"],
+              }}],
+              "contexts": [{"name": "default", "context": {"cluster": "default", "user": "default"}}],
+              "current-context": "default",
+              "preferences": {},
+              "users": [{"name": "default", "user": {
+                  "client-certificate-data": os.environ["K8S_CLIENT_CERT_DATA"],
+                  "client-key-data": os.environ["K8S_CLIENT_KEY_DATA"],
+              }}],
+          }))
+          PY
+      - run: make .deploy

@@ -61,3 +61,15 @@ run-native:
 ## run the app inside a docker container
 run-docker:
 	docker run --expose 4000 -p 4000:4000 -it --rm $(name):latest
+
+## run the C# shell harness on :5100 (same API shape as the real Eco mod)
+run-shell:
+	cd mod && dotnet run --project shell/EcoJobsTracker.Shell.csproj
+
+## build the real Eco mod DLL (drops in mod/src/bin/Release/net10.0/)
+build-mod:
+	cd mod && dotnet build src/EcoJobsTracker.csproj -c Release
+
+## verify C# formatting (used by pre-commit)
+format-cs:
+	cd mod && dotnet format

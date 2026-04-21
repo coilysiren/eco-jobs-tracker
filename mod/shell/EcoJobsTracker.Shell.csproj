@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>EcoJobsTracker.Shell</AssemblyName>
+    <RootNamespace>EcoJobsTracker.Shell</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Share DTOs with the real mod so responses match byte-for-byte. -->
+  <ItemGroup>
+    <Compile Include="..\src\Dtos.cs" Link="Dtos.cs" />
+  </ItemGroup>
+
+</Project>

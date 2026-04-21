@@ -14,30 +14,45 @@ Deploy target: `eco-jobs-tracker.coilysiren.me` (k3s homelab, same rig as `backe
 
 ## Project layout
 
+Python side (the web app):
 - `src/eco_spec_tracker/main.py` — FastAPI app. Routes: `/`, `/players`, `/healthz`, `/partials/*` (HTMX), `/api/v1/*` (JSON).
-- `src/eco_spec_tracker/mock_data.py` — placeholder data matching the shape the mod will return.
-- `src/eco_spec_tracker/templates/` — Jinja2 templates. `base.html` is the layout; `_*.html` are HTMX partials.
-- `src/eco_spec_tracker/static/app.css` — single stylesheet, dark theme, no build step.
-- `mod/` — (TODO) C# UserCode mod source for Eco. Drops into `Eco/Server/Mods/UserCode/`; auto-compiled by the server's Roslyn compiler at boot. No csproj needed.
-- `Makefile` / `Dockerfile` / `config.yml` / `deploy/main.yml` / `.github/workflows/build-and-publish.yml` — deploy rig cloned from `coilysiren/backend` pattern.
+- `src/eco_spec_tracker/mock_data.py` — placeholder data matching the shape the mod returns. Bypassed once the real mod is wired.
+- `src/eco_spec_tracker/templates/` — Jinja2 templates. `base.html` is the layout; `_*.html` are HTMX partials. Styling via Tailwind Play CDN (no build step).
+- `src/eco_spec_tracker/static/` — empty for now; keep around for future self-hosted assets.
+
+C# side (the mod):
+- `mod/eco-jobs-tracker.sln` — one solution, two projects.
+- `mod/src/EcoJobsTracker.csproj` + `.cs` — the real mod. References `Eco.ReferenceAssemblies`. Compiles to a DLL that drops into Eco's `Server/Mods/EcoJobsTracker/` directory.
+- `mod/shell/EcoJobsTracker.Shell.csproj` + `.cs` — standalone ASP.NET Core harness. Same route (`GET /api/v1/skills`), same DTOs, canned data. Lets the Python tracker iterate against a real C# HTTP server on `localhost:5100` without booting Eco.
+- `mod/src/Dtos.cs` — shared DTO record types; `<Compile Include>`-linked into the shell so responses match byte-for-byte.
+
+Deploy rig (cloned from `coilysiren/backend` pattern):
+- `Makefile`, `Dockerfile`, `config.yml`, `deploy/main.yml`, `.github/workflows/build-and-publish.yml`.
 
 ## Dev loop
 
-- `make build-native` — `uv sync --group dev`.
-- `make run-native` — uvicorn on `:4000` with `--reload`. Edit any file under `src/` and the server restarts.
+- `make build-native` — `uv sync --group dev` (Python).
+- `make run-native` — uvicorn on `:4100` with `--reload`. Edit any file under `src/` and the server restarts.
+- `make run-shell` — C# shell harness on `:5100`, same API shape the real mod will serve.
+- `make build-mod` — compile the real mod DLL for deployment onto an Eco server.
 - `make build-docker` / `make deploy` — build/push image, roll out to k3s.
+- `pre-commit install` — ruff + mypy on Python, `dotnet format` on C# mod sources.
 
-## Data flow (target)
+## Data flow
 
 ```
-Eco server (C# mod, UserCode/Controllers/SkillsApiController.cs)
-  └─ GET http://eco-server:3001/api/v1/skills   [API key auth]
-       └─ FastAPI tracker (eco-jobs-tracker.coilysiren.me)
-            ├─ HTML UI (Jinja2 + HTMX)
-            └─ /api/v1/professions, /api/v1/players (JSON passthrough)
+Eco server ──[real mod, EcoJobsTracker.dll]──► GET /api/v1/skills
+                                                     ▲
+                              or locally            │
+                                                     │
+mod/shell (EcoJobsTracker.Shell) ───────────────────┘  (port 5100, mock data)
+
+                FastAPI tracker (eco-jobs-tracker.coilysiren.me, port 4100 locally)
+                    ├─ HTML UI (Jinja2 + HTMX + Tailwind)
+                    └─ /api/v1/{professions,players}
 ```
 
-Mock mode (current) bypasses the mod entirely and serves `mock_data.py`.
+Today the FastAPI server reads `mock_data.py` directly. Next step: add an `UPSTREAM_URL` env var so it pulls from either the shell harness or the real mod endpoint.
 
 ## Eco mod notes
 
