@@ -58,7 +58,6 @@ def index(request: Request) -> HTMLResponse:
             "stats": mock_data.profession_stats(),
             "specialties": mock_data.specialties(),
             "players": mock_data.players(),
-            "total_players": len(mock_data.players()),
         },
     )
 
@@ -67,12 +66,7 @@ def index(request: Request) -> HTMLResponse:
 def professions_page(request: Request) -> HTMLResponse:
     """Just the Professions section, no eco card."""
     return TEMPLATES.TemplateResponse(
-        request,
-        "professions.html",
-        {
-            "stats": mock_data.profession_stats(),
-            "total_players": len(mock_data.players()),
-        },
+        request, "professions.html", {"stats": mock_data.profession_stats()}
     )
 
 
@@ -88,13 +82,6 @@ def specialties_page(request: Request) -> HTMLResponse:
 def players_page(request: Request) -> HTMLResponse:
     """Just the Players section, no eco card."""
     return TEMPLATES.TemplateResponse(request, "players.html", {"players": mock_data.players()})
-
-
-@app.get("/partials/professions", response_class=HTMLResponse)
-def partial_professions(request: Request) -> HTMLResponse:
-    """HTMX partial: refreshable profession grid."""
-    stats = mock_data.profession_stats()
-    return TEMPLATES.TemplateResponse(request, "_professions.html", {"stats": stats})
 
 
 @app.get("/partials/profession/{name}", response_class=HTMLResponse)
