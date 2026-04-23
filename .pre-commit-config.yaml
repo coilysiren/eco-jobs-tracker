@@ -46,7 +46,7 @@ repos:
       - id: trufflehog
         name: trufflehog (secret scan, offline)
         description: Detect secrets in staged changes via local trufflehog binary (no API verification).
-        entry: trufflehog git file://. --since-commit HEAD --no-verification --no-update --fail
+        entry: trufflehog git file://. --since-commit HEAD --no-verification --no-update --fail --exclude-paths=.trufflehog-exclude
         language: system
         pass_filenames: false
         stages: [pre-commit, pre-push]

@@ -19,6 +19,7 @@ certifi==2026.2.25
     # via
     #   httpcore
     #   httpx
+    #   sentry-sdk
 cffi==2.0.0 ; platform_python_implementation != 'PyPy'
     # via cryptography
 click==8.3.2
@@ -35,6 +36,7 @@ fastapi==0.136.0
     # via
     #   eco-mcp-app
     #   eco-spec-tracker
+    #   sentry-sdk
 h11==0.16.0
     # via
     #   httpcore
@@ -99,6 +101,8 @@ rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
+sentry-sdk==2.58.0
+    # via eco-spec-tracker
 sse-starlette==3.3.4
     # via mcp
 starlette==1.0.0
@@ -119,6 +123,8 @@ typing-inspection==0.4.2
     #   mcp
     #   pydantic
     #   pydantic-settings
+urllib3==2.6.3
+    # via sentry-sdk
 uvicorn==0.44.0
     # via
     #   eco-mcp-app

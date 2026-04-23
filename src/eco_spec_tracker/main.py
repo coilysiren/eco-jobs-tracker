@@ -21,9 +21,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.responses import Response
 
-from eco_spec_tracker import mock_data, upstream
+from eco_spec_tracker import mock_data, telemetry, upstream
 from eco_spec_tracker.livereload import DEBUG, LIVERELOAD_SCRIPT
 from eco_spec_tracker.livereload import router as livereload_router
+
+telemetry.init_sentry()
 
 # Allow coilysiren.me to embed this app in an iframe (eco-modding page).
 # Modern browsers honor frame-ancestors and ignore X-Frame-Options when both
