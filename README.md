@@ -96,8 +96,14 @@ mod-shaped fixture.
 make build-mod       # mod/src/bin/Release/net10.0/EcoJobsTracker.dll
 ```
 
-Drops into an Eco server's `Mods/UserCode/` directory (the exact path on
-`kai-server` is TBD; see `CLAUDE.md` open questions).
+Drops into an Eco server's `Mods/EcoJobsTracker/` directory.
+
+## Publishing to mod.io
+
+See [`docs/modio.md`](docs/modio.md) for the canonical mod.io listing copy
+(name, summary, description, tags, logo path) and the distribution zip
+shape. Bump `<Version>` in [`mod/src/EcoJobsTracker.csproj`](mod/src/EcoJobsTracker.csproj)
+before each upload.
 
 ## Deploy
 
