@@ -81,10 +81,15 @@ The community mod `eco-price-calculator` (mod.io) is a known example of a mod th
 
 ## Reaching the homelab
 
-`tailscale up && ssh kai@kai-server` gets you into the k3s host. The GitHub Actions `deploy` job does the same thing (tailscale up → kubeconfig → `make .deploy`). For ad-hoc mod drops, `scp mod/src/bin/Release/net10.0/EcoJobsTracker.dll kai@kai-server:<eco-server-mods-dir>/` followed by a server restart is the expected path; the exact destination directory on kai-server is still TBD.
+`tailscale up && ssh kai@kai-server` gets you into the k3s host. The GitHub Actions `deploy` job does the same thing (tailscale up → kubeconfig → `make .deploy`).
+
+### Pushing the mod DLL
+
+`coily eco mod push --src EcoJobsTracker.zip` is the canonical path. The zip must contain `Mods/EcoJobsTracker/EcoJobsTracker.dll` (plus sibling `.deps.json` / `.pdb` when present) so it extracts directly under `/home/kai/Steam/steamapps/common/EcoServer/`. Then `coily eco restart` loads it. See [`infrastructure/eco.md`](../infrastructure/eco.md) §4 for the zip convention and sequencing rules (especially: push the mod before the web app picks up `UPSTREAM_URL`, since `upstream.py` has no fallback on a dead endpoint).
+
+Build with `make build-mod` (drops the three files in `mod/src/bin/Release/net10.0/`); zip from that directory with the `Mods/EcoJobsTracker/` prefix.
 
 ## Open questions
 
-- Exact Eco server install path on kai-server (for the mod-DLL scp destination).
 - API-key provisioning for the mod endpoint (once we move off mock data).
 - Whether "active" means "online right now" or "logged in within N days" - currently a mock boolean.
