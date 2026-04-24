@@ -1,8 +1,13 @@
+using System.Text.Json.Serialization;
+
 namespace EcoJobsTracker;
 
-public record SpecialtyDto(string Name, int Level, int MaxLevel);
+public record SpecialtyDto(
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("level")] int Level,
+    [property: JsonPropertyName("maxLevel")] int MaxLevel);
 
 public record PlayerSkillsDto(
-    string Player,
-    bool Active,
-    SpecialtyDto[] Specialties);
+    [property: JsonPropertyName("player")] string Player,
+    [property: JsonPropertyName("active")] bool Active,
+    [property: JsonPropertyName("specialties")] SpecialtyDto[] Specialties);
