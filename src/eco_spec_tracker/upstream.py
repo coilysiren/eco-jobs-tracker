@@ -26,14 +26,16 @@ import httpx
 from eco_spec_tracker.mock_data import PlayerSpecialty, all_rows
 
 UPSTREAM_URL = os.getenv("UPSTREAM_URL")
+UPSTREAM_API_KEY = os.getenv("UPSTREAM_API_KEY")
 UPSTREAM_TIMEOUT_SECONDS = 5.0
 
 
 async def fetch_rows() -> list[PlayerSpecialty]:
     if not UPSTREAM_URL:
         return all_rows()
+    headers = {"X-API-Key": UPSTREAM_API_KEY} if UPSTREAM_API_KEY else {}
     async with httpx.AsyncClient(timeout=UPSTREAM_TIMEOUT_SECONDS) as client:
-        response = await client.get(UPSTREAM_URL)
+        response = await client.get(UPSTREAM_URL, headers=headers)
         response.raise_for_status()
         payload = response.json()
     rows: list[PlayerSpecialty] = []
