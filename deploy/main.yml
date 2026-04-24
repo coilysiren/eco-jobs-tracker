@@ -65,6 +65,8 @@ spec:
           env:
             - name: PORT
               value: "80"
+            - name: UPSTREAM_URL
+              value: "http://eco.coilysiren.me:3001/api/v1/skills"
             - name: SENTRY_DSN
               valueFrom:
                 secretKeyRef:
