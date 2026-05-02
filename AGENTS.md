@@ -12,7 +12,7 @@ Deploy target: `eco-jobs-tracker.coilysiren.me` (k3s homelab, same rig as `backe
 
 ## Deploy reference
 
-This repo is the **canonical reference** for the current deploy shape - when other repos need to match a working baseline, eco-spec-tracker is what they copy from (commit `49f99e4`). The comprehensive writeup still lives in [`infrastructure/docs/k3s-deploy-notes.md`](../infrastructure/docs/k3s-deploy-notes.md). Read that first before touching any deploy config (Dockerfile, Makefile, `deploy/main.yml`, GHA workflow, or Tailscale/k3s secrets). When you resolve a new deploy pitfall, add it to that doc's §7 / §9.
+This repo is the **canonical reference** for the current deploy shape - when other repos need to match a working baseline, eco-jobs-tracker is what they copy from (commit `49f99e4`). The comprehensive writeup still lives in [`infrastructure/docs/k3s-deploy-notes.md`](../infrastructure/docs/k3s-deploy-notes.md). Read that first before touching any deploy config (Dockerfile, Makefile, `deploy/main.yml`, GHA workflow, or Tailscale/k3s secrets). When you resolve a new deploy pitfall, add it to that doc's §7 / §9.
 
 ## Project layout
 
@@ -101,6 +101,6 @@ Build with `make build-mod` (drops the three files in `mod/src/bin/Release/net10
 Per the workspace "Default to proactive scheduling" rule: after pushing to `main`, schedule a wake-up to verify the build-publish-deploy job landed on kai-server. CI builds the docker image, pushes to ghcr.io, and rolls out a k8s deployment; total time is ~6-12 min.
 
 - **Cadence**: 720s (12 min) after push.
-- **Verify CI**: `coily gh run list --repo coilysiren/eco-spec-tracker --limit 1` should show `completed/success`. Re-schedule once at +300s if in progress; surface and stop on failure.
+- **Verify CI**: `coily gh run list --repo coilysiren/eco-jobs-tracker --limit 1` should show `completed/success`. Re-schedule once at +300s if in progress; surface and stop on failure.
 - **Verify rollout**: `coily kubectl --context=kai-server -n coilysiren-eco-spec-tracker rollout status deployment/coilysiren-eco-spec-tracker-app --timeout=2m`.
 - **Skip** for docs-only pushes.

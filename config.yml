@@ -1,6 +1,6 @@
 dns-name: eco-jobs-tracker.coilysiren.me
 email: coilysiren@gmail.com
-name: coilysiren/eco-spec-tracker
+name: coilysiren/eco-jobs-tracker
 # dev-server port. Avoids the :4000 collision with eco-mcp-app running on the same machine.
 port: 4100
 

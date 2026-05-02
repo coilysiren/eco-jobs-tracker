@@ -1,4 +1,4 @@
-# eco-spec-tracker
+# eco-jobs-tracker
 
 What it's like to build a read-only "who can make what" board for an **Eco** [1]
 server in 300 lines of FastAPI — a single page that lists every player, every
