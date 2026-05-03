@@ -1,5 +1,15 @@
 # eco-jobs-tracker
 
+> **Naming.** `eco-jobs-tracker` is the canonical name (GitHub repo, public
+> subdomain `eco-jobs-tracker.coilysiren.me`, and the C# mod `EcoJobsTracker`).
+> The deploy internals - k8s namespace `coilysiren-eco-spec-tracker`, Python
+> package `eco_spec_tracker`, Docker image `coilysiren-eco-spec-tracker`, SSM
+> key `/sentry-dsn/eco-spec-tracker`, and Sentry project - still carry the old
+> name. Renaming those is a separate, riskier surgery (k8s namespace teardown +
+> Sentry project break); GitHub's auto-redirect makes the gap free, so it can
+> wait. **Do not change `config.yml`'s `name` field on its own** - it cascades
+> into every k8s resource name and the image tag at deploy time.
+
 What it's like to build a read-only "who can make what" board for an **Eco** [1]
 server in 300 lines of FastAPI — a single page that lists every player, every
 profession, every learned specialty, with live `active / total` counts.
