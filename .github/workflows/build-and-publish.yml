@@ -33,8 +33,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - run: name=coilysiren-eco-spec-tracker make .build-docker
-      - run: docker tag coilysiren-eco-spec-tracker:latest ghcr.io/${{ github.repository }}/coilysiren-eco-spec-tracker:${{ github.sha }}
-      - run: docker push ghcr.io/${{ github.repository }}/coilysiren-eco-spec-tracker:${{ github.sha }}
+      # GHCR path is pinned to the pre-rename repo name (coilysiren/eco-spec-tracker)
+      # to match the Makefile's image-url, which derives from config.yml's `name`
+      # field (intentionally still on the old name; see README.md naming note).
+      # github.repository now resolves to coilysiren/eco-jobs-tracker after the
+      # 2026-05-02 rename, so don't use it here.
+      - run: docker tag coilysiren-eco-spec-tracker:latest ghcr.io/coilysiren/eco-spec-tracker/coilysiren-eco-spec-tracker:${{ github.sha }}
+      - run: docker push ghcr.io/coilysiren/eco-spec-tracker/coilysiren-eco-spec-tracker:${{ github.sha }}
 
   deploy:
     runs-on: ubuntu-latest
