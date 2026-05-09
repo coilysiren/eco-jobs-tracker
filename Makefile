@@ -1,6 +1,6 @@
 DEFAULT_GOAL := help
 
-.PHONY: deploy run-native run-docker build-native build-docker publish
+.PHONY: deploy run-native run-docker build-native build-docker publish test lint format precommit
 
 dns-name ?= $(shell cat config.yml | yq e '.dns-name')
 email ?= $(shell cat config.yml | yq e '.email')
@@ -87,3 +87,22 @@ build-mod:
 ## verify C# formatting (used by pre-commit)
 format-cs:
 	cd mod && dotnet format
+
+## run the pytest smoke suite
+test:
+	uv run pytest
+
+## ruff lint + format (check mode) + mypy
+lint:
+	uv run ruff check src tests
+	uv run ruff format --check src tests
+	uv run mypy src tests
+
+## apply ruff fixes + format in place
+format:
+	uv run ruff check --fix src tests
+	uv run ruff format src tests
+
+## run all pre-commit hooks against every file
+precommit:
+	uv run pre-commit run --all-files

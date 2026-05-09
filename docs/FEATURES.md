@@ -51,7 +51,7 @@ A two-process system: a C# Eco server mod that exposes a read-only HTTP endpoint
 - **`make build-mod`** - Compiles the production mod DLL.
 - **`make build-docker` / `make deploy`** - Container build/push and k3s rollout.
 - **Pre-commit** - ruff + mypy on Python, `dotnet format` on C#.
-- **Smoke test suite** - `tests/test_smoke.py` exercises every page, every JSON endpoint, the eco-card partial (with the upstream Eco `/info` stubbed via respx), and the upstream parser against a mod-shaped fixture. Run via `inv test` or `uv run pytest`.
+- **Smoke test suite** - `tests/test_smoke.py` exercises every page, every JSON endpoint, the eco-card partial (with the upstream Eco `/info` stubbed via respx), and the upstream parser against a mod-shaped fixture. Run via `make test` (or `coily test`).
 
 ## Naming-debt note
 

@@ -1,31 +1,13 @@
 # Per-repo command allowlist for eco-jobs-tracker. Coily is the canonical
-# entry point for dev verbs here; each command below delegates to a
-# pyinvoke task in tasks.py. Operators (human or agent) type `coily <verb>`,
-# not `inv <task>` - the lockdown denies bare uv/python invocations.
+# entry point for dev verbs here; each command below delegates to a Make
+# target. Operators (human or agent) type `coily <verb>`, not `make <target>`.
+# The lockdown denies bare uv/make/python invocations.
 #
 # Names follow coily's [a-z0-9-] rule. Argv validation rejects shell
 # metacharacters at invocation time, so flags forward verbatim through
 # coily's user-extras mechanism.
 
 commands:
-  sync:
-    run: uv run inv sync
-    description: Install runtime + dev deps via `uv sync --group dev`.
-  test:
-    run: uv run inv test
-    description: Run the pytest smoke suite.
-  ruff:
-    run: uv run inv ruff
-    description: Lint + format check (no mutations).
-  fmt:
-    run: uv run inv fmt
-    description: Apply ruff fixes and formatting in place.
-  precommit:
-    run: uv run inv precommit
-    description: Run all pre-commit hooks against every file.
-  run:
-    run: uv run inv run
-    description: Run the FastAPI dev server with autoreload on port 4100. Pass --port=N to override.
   build-native:
     run: make build-native
     description: uv lock + uv sync. Rebuilds requirements.txt from pyproject.toml.
@@ -35,3 +17,30 @@ commands:
   publish:
     run: make publish
     description: Tag and push the docker image to ghcr.io.
+  run-native:
+    run: make run-native
+    description: Run the FastAPI server with autoreload + livereload on port 4100.
+  run-docker:
+    run: make run-docker
+    description: Run the published container locally on port 4100.
+  run-shell:
+    run: make run-shell
+    description: Run the C# shell harness on :5100 (same API shape as the real Eco mod).
+  build-mod:
+    run: make build-mod
+    description: Build the real Eco mod DLL (drops in mod/src/bin/Release/net10.0/).
+  format-cs:
+    run: make format-cs
+    description: Verify C# formatting (dotnet format).
+  test:
+    run: make test
+    description: Run the pytest smoke suite.
+  lint:
+    run: make lint
+    description: ruff check + ruff format --check + mypy on src/ and tests/.
+  format:
+    run: make format
+    description: Apply ruff fixes and formatting in place.
+  precommit:
+    run: make precommit
+    description: Run all pre-commit hooks against every file.

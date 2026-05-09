@@ -15,9 +15,9 @@ jobs:
           python-version: "3.13"
       - run: uv sync --group dev
       - run: uv run pytest
-      - run: uv run ruff check src tests tasks.py
-      - run: uv run ruff format --check src tests tasks.py
-      - run: uv run mypy src tests tasks.py
+      - run: uv run ruff check src tests
+      - run: uv run ruff format --check src tests
+      - run: uv run mypy src tests
 
   build-publish:
     runs-on: ubuntu-latest

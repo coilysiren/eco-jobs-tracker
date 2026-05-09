@@ -92,7 +92,7 @@ UPSTREAM_URL=http://localhost:5100/api/v1/skills make run-native
 ## Tests
 
 ```sh
-inv test             # or: uv run pytest
+make test            # or: coily test
 ```
 
 Smoke suite under `tests/test_smoke.py`: every page, every `/api/v1/*`, the
