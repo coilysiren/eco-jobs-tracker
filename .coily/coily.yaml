@@ -1,0 +1,37 @@
+# Per-repo command allowlist for eco-jobs-tracker. Coily is the canonical
+# entry point for dev verbs here; each command below delegates to a
+# pyinvoke task in tasks.py. Operators (human or agent) type `coily <verb>`,
+# not `inv <task>` - the lockdown denies bare uv/python invocations.
+#
+# Names follow coily's [a-z0-9-] rule. Argv validation rejects shell
+# metacharacters at invocation time, so flags forward verbatim through
+# coily's user-extras mechanism.
+
+commands:
+  sync:
+    run: uv run inv sync
+    description: Install runtime + dev deps via `uv sync --group dev`.
+  test:
+    run: uv run inv test
+    description: Run the pytest smoke suite.
+  ruff:
+    run: uv run inv ruff
+    description: Lint + format check (no mutations).
+  fmt:
+    run: uv run inv fmt
+    description: Apply ruff fixes and formatting in place.
+  precommit:
+    run: uv run inv precommit
+    description: Run all pre-commit hooks against every file.
+  run:
+    run: uv run inv run
+    description: Run the FastAPI dev server with autoreload on port 4100. Pass --port=N to override.
+  build-native:
+    run: make build-native
+    description: uv lock + uv sync. Rebuilds requirements.txt from pyproject.toml.
+  build-docker:
+    run: make build-docker
+    description: Build the docker image locally with BuildKit cache.
+  publish:
+    run: make publish
+    description: Tag and push the docker image to ghcr.io.
