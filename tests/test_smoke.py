@@ -99,7 +99,7 @@ def test_partials_eco_card_renders(client: TestClient) -> None:
 UPSTREAM_FIXTURE = [
     {
         "player": "alice",
-        "active": True,
+        "lastSeen": "2026-05-08T12:00:00Z",  # recent: within default 7d window
         "specialties": [
             {"name": "Basic Carpentry", "level": 3, "maxLevel": 7},
             {"name": "Mining", "level": 0, "maxLevel": 7},  # filtered: level 0
@@ -107,7 +107,7 @@ UPSTREAM_FIXTURE = [
     },
     {
         "player": "bob",
-        "active": False,
+        "lastSeen": None,  # never logged in
         "specialties": [{"name": "Farming", "level": 2, "maxLevel": 7}],
     },
 ]
@@ -115,6 +115,8 @@ UPSTREAM_FIXTURE = [
 
 @respx.mock
 async def test_upstream_fetch_rows_parses_response(monkeypatch: pytest.MonkeyPatch) -> None:
+    from datetime import UTC, datetime
+
     monkeypatch.setattr(upstream, "UPSTREAM_URL", "http://fake/api/v1/skills")
     respx.get("http://fake/api/v1/skills").mock(
         return_value=httpx.Response(200, json=UPSTREAM_FIXTURE)
@@ -127,7 +129,10 @@ async def test_upstream_fetch_rows_parses_response(monkeypatch: pytest.MonkeyPat
     alice_row = next(r for r in rows if r.player == "alice")
     assert alice_row.specialty == "Basic Carpentry"
     assert alice_row.level == 3
-    assert alice_row.active is True
+    assert alice_row.last_seen == datetime(2026, 5, 8, 12, 0, tzinfo=UTC)
+    bob_row = next(r for r in rows if r.player == "bob")
+    assert bob_row.last_seen is None
+    assert bob_row.active is False
 
 
 def test_upstream_unset_falls_back_to_mock(monkeypatch: pytest.MonkeyPatch) -> None:

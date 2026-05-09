@@ -8,6 +8,14 @@
     <RootNamespace>EcoJobsTracker.Shell</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- The shell harness serializes via System.Text.Json, but the shared
+         Dtos.cs carries Newtonsoft attributes too (for the real mod, which
+         runs under Eco's Newtonsoft pipeline). Reference the package so
+         compile-time attribute lookups resolve here. -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
   <!-- Share DTOs with the real mod so responses match byte-for-byte. -->
   <ItemGroup>
     <Compile Include="..\src\Dtos.cs" Link="Dtos.cs" />

@@ -1,12 +1,30 @@
 """Mock data shaped like what the Eco mod will eventually return.
 
-Each player has a set of learned specialties (skill trees with Level > 0).
-The tracker aggregates this per-profession to show `active / total`.
+Each player has a set of learned specialties (skill trees with Level > 0)
+and a `last_seen` timestamp (None if the player has never logged in).
+The tracker derives "active" from `last_seen >= now - ACTIVE_WINDOW_DAYS`,
+so what the dashboard highlights matches "logged in within the last week"
+rather than "online right this second."
 """
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+
+ACTIVE_WINDOW_DAYS = int(os.getenv("ACTIVE_WINDOW_DAYS", "7"))
+
+
+def _now() -> datetime:
+    return datetime.now(UTC)
+
+
+def is_active(last_seen: datetime | None, now: datetime | None = None) -> bool:
+    if last_seen is None:
+        return False
+    cutoff = (now or _now()) - timedelta(days=ACTIVE_WINDOW_DAYS)
+    return last_seen >= cutoff
 
 
 @dataclass(frozen=True)
@@ -14,7 +32,11 @@ class PlayerSpecialty:
     player: str
     specialty: str
     level: int  # 0 means not learned; we only store learned rows in mock data
-    active: bool  # "active" = logged in within the last N days, placeholder for now
+    last_seen: datetime | None  # None = never logged in
+
+    @property
+    def active(self) -> bool:
+        return is_active(self.last_seen)
 
 
 # Canonical profession → specialties map, mirroring Eco's skill tree roughly.
@@ -35,38 +57,49 @@ PROFESSION_SPECIALTIES: dict[str, list[str]] = {
 }
 
 
-_MOCK_ROWS: list[PlayerSpecialty] = [
-    PlayerSpecialty("coilysiren", "Basic Carpentry", 5, True),
-    PlayerSpecialty("coilysiren", "Advanced Carpentry", 3, True),
-    PlayerSpecialty("coilysiren", "Furniture Making", 2, True),
-    PlayerSpecialty("ekans", "Basic Carpentry", 4, True),
-    PlayerSpecialty("ekans", "Lumber", 1, True),
-    PlayerSpecialty("ekans", "Mining", 6, True),
-    PlayerSpecialty("redwood", "Glassworking", 5, False),
-    PlayerSpecialty("redwood", "Basic Masonry", 2, False),
-    PlayerSpecialty("redwood", "Pottery", 3, False),
-    PlayerSpecialty("salt", "Campfire Cooking", 4, True),
-    PlayerSpecialty("salt", "Baking", 2, True),
-    PlayerSpecialty("salt", "Farming", 5, True),
-    PlayerSpecialty("salt", "Gardening", 3, True),
-    PlayerSpecialty("quill", "Paper Milling", 4, True),
-    PlayerSpecialty("quill", "Printing", 2, True),
-    PlayerSpecialty("hammerhand", "Basic Masonry", 5, True),
-    PlayerSpecialty("hammerhand", "Brick Making", 4, True),
-    PlayerSpecialty("hammerhand", "Advanced Masonry", 3, True),
-    PlayerSpecialty("voltaic", "Mechanics", 5, False),
-    PlayerSpecialty("voltaic", "Electronics", 4, False),
-    PlayerSpecialty("voltaic", "Industry", 2, False),
-    PlayerSpecialty("fernweh", "Farming", 3, True),
-    PlayerSpecialty("fernweh", "Fertilizers", 2, True),
-    PlayerSpecialty("fernweh", "Hunting", 4, True),
-    PlayerSpecialty("fernweh", "Butchery", 3, True),
-    PlayerSpecialty("ore-ge", "Basic Smelting", 5, True),
-    PlayerSpecialty("ore-ge", "Advanced Smelting", 3, True),
-    PlayerSpecialty("ore-ge", "Alloys", 2, True),
-    PlayerSpecialty("tinkerbell", "Tailoring", 4, False),
-    PlayerSpecialty("tinkerbell", "Advanced Tailoring", 2, False),
-]
+def _build_mock_rows() -> list[PlayerSpecialty]:
+    """Build mock rows with `last_seen` values relative to now.
+
+    Recomputed at module import; close enough for a dev dataset. Mix recent
+    (within 7 days), stale (> 7 days), and never-logged-in players so the
+    active filter has something to do.
+    """
+    now = _now()
+    last_seen_by_player: dict[str, datetime | None] = {
+        "coilysiren": now - timedelta(hours=2),
+        "ekans": now - timedelta(days=1),
+        "redwood": now - timedelta(days=30),
+        "salt": now - timedelta(days=2),
+        "quill": now - timedelta(days=4),
+        "hammerhand": now - timedelta(days=6),
+        "voltaic": now - timedelta(days=20),
+        "fernweh": now - timedelta(hours=12),
+        "ore-ge": now - timedelta(days=3),
+        "tinkerbell": None,
+    }
+
+    rows_by_player: dict[str, list[tuple[str, int]]] = {
+        "coilysiren": [("Basic Carpentry", 5), ("Advanced Carpentry", 3), ("Furniture Making", 2)],
+        "ekans": [("Basic Carpentry", 4), ("Lumber", 1), ("Mining", 6)],
+        "redwood": [("Glassworking", 5), ("Basic Masonry", 2), ("Pottery", 3)],
+        "salt": [("Campfire Cooking", 4), ("Baking", 2), ("Farming", 5), ("Gardening", 3)],
+        "quill": [("Paper Milling", 4), ("Printing", 2)],
+        "hammerhand": [("Basic Masonry", 5), ("Brick Making", 4), ("Advanced Masonry", 3)],
+        "voltaic": [("Mechanics", 5), ("Electronics", 4), ("Industry", 2)],
+        "fernweh": [("Farming", 3), ("Fertilizers", 2), ("Hunting", 4), ("Butchery", 3)],
+        "ore-ge": [("Basic Smelting", 5), ("Advanced Smelting", 3), ("Alloys", 2)],
+        "tinkerbell": [("Tailoring", 4), ("Advanced Tailoring", 2)],
+    }
+
+    rows: list[PlayerSpecialty] = []
+    for player, specialties in rows_by_player.items():
+        last_seen = last_seen_by_player[player]
+        for specialty, level in specialties:
+            rows.append(PlayerSpecialty(player, specialty, level, last_seen))
+    return rows
+
+
+_MOCK_ROWS: list[PlayerSpecialty] = _build_mock_rows()
 
 
 def all_rows() -> list[PlayerSpecialty]:
@@ -115,12 +148,12 @@ def players(rows: list[PlayerSpecialty] | None = None) -> list[PlayerView]:
     for r in source:
         by_player.setdefault(r.player, []).append(r)
     out: list[PlayerView] = []
-    for name, rows in by_player.items():
+    for name, player_rows in by_player.items():
         out.append(
             PlayerView(
                 name=name,
-                active=any(r.active for r in rows),
-                specialties=sorted(rows, key=lambda r: r.specialty),
+                active=any(r.active for r in player_rows),
+                specialties=sorted(player_rows, key=lambda r: r.specialty),
             )
         )
     out.sort(key=lambda p: (not p.active, p.name))
@@ -155,9 +188,9 @@ def specialties(rows: list[PlayerSpecialty] | None = None) -> list[SpecialtyView
     for r in source:
         by_spec.setdefault(r.specialty, []).append(r)
     out: list[SpecialtyView] = []
-    for spec, rows in by_spec.items():
+    for spec, spec_rows in by_spec.items():
         holders = sorted(
-            (SpecialtyHolder(r.player, r.level, r.active) for r in rows),
+            (SpecialtyHolder(r.player, r.level, r.active) for r in spec_rows),
             key=lambda h: (not h.active, -h.level, h.player),
         )
         out.append(
