@@ -135,6 +135,37 @@ async def test_upstream_fetch_rows_parses_response(monkeypatch: pytest.MonkeyPat
     assert bob_row.active is False
 
 
+OLD_MOD_FIXTURE = [
+    {
+        "player": "online_now",
+        "active": True,
+        "specialties": [{"name": "Mining", "level": 5, "maxLevel": 7}],
+    },
+    {
+        "player": "offline",
+        "active": False,
+        "specialties": [{"name": "Logging", "level": 3, "maxLevel": 7}],
+    },
+]
+
+
+@respx.mock
+async def test_upstream_falls_back_to_old_active_bool(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Mods deployed before the lastSeen rollout still return `active: bool`."""
+    monkeypatch.setattr(upstream, "UPSTREAM_URL", "http://fake/api/v1/skills")
+    respx.get("http://fake/api/v1/skills").mock(
+        return_value=httpx.Response(200, json=OLD_MOD_FIXTURE)
+    )
+    rows = await upstream.fetch_rows()
+    by_player = {r.player: r for r in rows}
+    assert by_player["online_now"].last_seen is not None
+    assert by_player["online_now"].active is True
+    assert by_player["offline"].last_seen is None
+    assert by_player["offline"].active is False
+
+
 def test_upstream_unset_falls_back_to_mock(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(upstream, "UPSTREAM_URL", None)
 

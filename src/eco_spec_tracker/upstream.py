@@ -4,7 +4,7 @@ Set `UPSTREAM_URL` to the mod endpoint (e.g. `http://localhost:5100/api/v1/skill
 for the shell harness, or the real Eco server's mod URL in prod). When unset,
 fall back to the in-repo mock data so local dev works offline.
 
-Upstream shape (matches `mod/src/Dtos.cs`, camelCased by ASP.NET's default
+New mod shape (matches `mod/src/Dtos.cs`, camelCased by ASP.NET's default
 System.Text.Json policy):
 
     [
@@ -16,8 +16,11 @@ System.Text.Json policy):
       ...
     ]
 
-The mod returns wall-clock UTC. The Python side derives "active" by
-comparing against `now() - ACTIVE_WINDOW_DAYS` in `mock_data.is_active`.
+Pre-#3 mods returned `"active": bool` instead of `"lastSeen"`. We keep parsing
+that as a fallback so the web app keeps working through the rollout window
+between deploying this app and pushing the new mod DLL onto kai-server. True
+maps to "seen right now"; False/missing maps to None. Once every Eco server
+has the new mod, this branch can be deleted.
 """
 
 from __future__ import annotations
@@ -45,6 +48,16 @@ def _parse_last_seen(raw: str | None) -> datetime | None:
     return parsed.astimezone(UTC)
 
 
+def _resolve_last_seen(payload_player: dict) -> datetime | None:
+    last_seen = _parse_last_seen(payload_player.get("lastSeen"))
+    if last_seen is not None:
+        return last_seen
+    # Fallback for old mods that only return `active: bool`.
+    if payload_player.get("active") is True:
+        return datetime.now(UTC)
+    return None
+
+
 async def fetch_rows() -> list[PlayerSpecialty]:
     if not UPSTREAM_URL:
         return all_rows()
@@ -56,7 +69,7 @@ async def fetch_rows() -> list[PlayerSpecialty]:
     rows: list[PlayerSpecialty] = []
     for p in payload:
         player = p["player"]
-        last_seen = _parse_last_seen(p.get("lastSeen"))
+        last_seen = _resolve_last_seen(p)
         for s in p.get("specialties", []):
             level = int(s.get("level", 0))
             if level <= 0:
