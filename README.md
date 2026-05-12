@@ -144,3 +144,7 @@ unofficial fan tool and is not affiliated with StrangeLoopGames.
 3. <https://github.com/StrangeLoopGames/EcoModKit>
 4. <https://github.com/coilysiren/backend>
 5. <https://www.strangeloopgames.com/>
+
+## Commands
+
+Dev commands are declared in [`.coily/coily.yaml`](.coily/coily.yaml). Run them as `coily exec <verb>`.
