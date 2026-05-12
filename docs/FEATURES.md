@@ -61,3 +61,11 @@ Public surface: `eco-jobs-tracker` (GitHub repo, subdomain, C# mod). Internal su
 
 - API-key provisioning shape if the mod ever needs its own token instead of reusing the `eco-mcp-app` admin token.
 - Whether `active` means "online right now" (current behavior, from `user.LoggedIn`) or "logged in within N days" (mock-era boolean).
+
+## See also
+
+- [README.md](../README.md) - human-facing intro.
+- [AGENTS.md](../AGENTS.md) - agent-facing operating rules.
+- [.coily/coily.yaml](../.coily/coily.yaml) - allowlisted commands.
+
+Cross-reference convention from [coilysiren/coilyco-ai#313](https://github.com/coilysiren/coilyco-ai/issues/313).
