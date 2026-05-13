@@ -4,3 +4,5 @@ name: coilysiren/eco-spec-tracker
 # dev-server port. Avoids the :4000 collision with eco-mcp-app running on the same machine.
 port: 4100
 
+tailnet:
+  shortcut: eco-jobs-tracker
