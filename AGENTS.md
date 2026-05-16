@@ -77,7 +77,7 @@ The community mod `eco-price-calculator` (mod.io) is a known example of a mod th
 | `eco-mcp-app` | public | MCP server exposing Eco `/info` - same deploy rig. |
 | `eco-mods` / `eco-mods-public` | private / public | C# mods for the Eco server. |
 | `infrastructure` | public | k3s cluster config, Traefik, cert-manager. |
-| `kai-server` | public | Homelab k3s box (`kai@kai-server`, Tailscale `100.69.164.66`). |
+| `kai-server` | public | Homelab k3s box (`kai@kai-server` over Tailscale). |
 
 ## Reaching the homelab
 
