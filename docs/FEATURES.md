@@ -1,66 +1,57 @@
 # Features
 
-Headline-feature inventory for `eco-jobs-tracker`. Use this as the baseline for evaluating scope changes (additions, removals, drift) over time. Granularity is "what does this repo do for a user / operator," not file-level detail.
+Headline-feature inventory for `eco-jobs-tracker`. Baseline for scope-change evaluation. "What does this repo do," not file-level detail.
 
-Last refreshed: 2026-05-08.
+## Shape
 
-## Shape in one line
+Two-process system: a C# Eco server mod exposing a read-only HTTP endpoint of every player's learned specialties, and a FastAPI dashboard rendering it as a "who can make what" board.
 
-A two-process system: a C# Eco server mod that exposes a read-only HTTP endpoint listing every player's learned specialties, and a FastAPI web dashboard that renders that data as a "who can make what" board.
+## Web dashboard (FastAPI)
 
-## Headline features
-
-### Web dashboard (FastAPI app)
-
-- **Live HTML dashboard at `eco-jobs-tracker.coilysiren.me`** - Single-page-style site with stacked sections for Professions, Specialties, and Players. Tailwind Play CDN, no build step.
-- **Three drill-down pages** - `/professions`, `/specialties`, `/players` each render just one section without the eco-card header, for direct linking.
-- **Embedded live Eco server status card** - Top of the homepage embeds the same status card rendered by the sister `eco-mcp-app` package (imported as a git dep). Visuals stay in lockstep with the MCP widget.
-- **HTMX partials for in-page expansion** - `/partials/eco-card` and `/partials/profession/{name}` serve fragment HTML for HTMX swaps (e.g. expand a profession to see its players).
-- **JSON API mirror** - `/api/v1/professions`, `/api/v1/players`, `/api/v1/specialties` return the same data the HTML pages render, machine-readable.
-- **Iframe embedding allowance** - CSP `frame-ancestors` allows `coilysiren.me` to embed the app (the eco-modding page on the personal site).
+- **Live HTML dashboard at `eco-jobs-tracker.coilysiren.me`** - Stacked sections for Professions, Specialties, Players. Tailwind CDN, no build step.
+- **Drill-down pages** - `/professions`, `/specialties`, `/players` each render one section without the eco-card header, for direct linking.
+- **Embedded live server-status card** - Top of homepage embeds the same card rendered by sibling `eco-mcp-app` (git dep). Stays in lockstep with the MCP widget.
+- **HTMX partials** - `/partials/eco-card` and `/partials/profession/{name}` serve fragments for in-page expansion.
+- **JSON API mirror** - `/api/v1/professions`, `/api/v1/players`, `/api/v1/specialties` return same data, machine-readable.
+- **Iframe embedding** - CSP `frame-ancestors` allows `coilysiren.me` to embed (eco-modding page on personal site).
 - **Healthcheck** - `/healthz` returns `{"ok": true}` for k8s probes.
-- **Mock-data fallback** - When `UPSTREAM_URL` is unset, the app serves canned data from `mock_data.py` so local dev and offline browsing always work. UI flags this state via a `using_mock_data` template global.
-- **Upstream mod fetch** - When `UPSTREAM_URL` is set, `upstream.py` calls the mod's `/api/v1/skills`, optionally forwarding `UPSTREAM_API_KEY` as `X-API-Key`, with a 5s timeout. No fallback on a dead endpoint (intentional, per AGENTS.md sequencing rules).
-- **Dev-only browser livereload** - Gated on `DEBUG` env var. Adds a `/ws/livereload` WebSocket and an injected `<script>` so file changes trigger a browser reload (CSS swaps without full reload). Zero runtime cost in prod.
-- **Sentry telemetry** - `SENTRY_DSN`-gated init with Starlette + FastAPI + logging integrations. No-op when DSN is unset.
+- **Mock-data fallback** - `UPSTREAM_URL` unset = serves canned data from `mock_data.py`. UI flags via `using_mock_data` template global.
+- **Upstream mod fetch** - `UPSTREAM_URL` set = `upstream.py` calls `/api/v1/skills`, forwards `UPSTREAM_API_KEY` as `X-API-Key`, 5s timeout. No fallback on dead endpoint (intentional).
+- **Dev-only livereload** - `DEBUG`-gated `/ws/livereload` WebSocket + injected script. CSS swaps without full reload. Zero prod cost.
+- **Sentry telemetry** - `SENTRY_DSN`-gated init. No-op when unset.
 
-### C# Eco mod (`EcoJobsTracker.dll`)
+## C# Eco mod (`EcoJobsTracker.dll`)
 
-- **`GET /api/v1/skills` endpoint inside the Eco server process** - Standard ModKit UserCode mod, registered as an `[ApiController]` picked up by Eco's ASP.NET Core host.
-- **Returns every player's learned specialties** - Iterates `UserManager.Users`, filters skills with `Level > 0 && IsSpecialty`, returns name, level, max-level, plus the player's online state (`active`).
-- **Auth via Eco's admin-token middleware** - Same `X-API-Key` gate the rest of `/api/v1/*` uses. No bespoke auth.
-- **Dual-attribute DTOs** - Response records carry both `System.Text.Json` and `Newtonsoft.Json` camelCase attributes so they serialize identically under either pipeline (Eco's vs the shell harness).
-- **mod.io distribution** - Listing copy and zip-shape conventions documented in `docs/modio.md`. Publishable as `Eco Jobs Tracker` under the `Script` tag.
+- **`GET /api/v1/skills` endpoint** - Standard ModKit UserCode mod, `[ApiController]` picked up by Eco's ASP.NET host.
+- **Every player's learned specialties** - Iterates `UserManager.Users`, filters skills `Level > 0 && IsSpecialty`, returns name/level/max-level + online state.
+- **Auth via Eco's admin-token middleware** - Same `X-API-Key` gate as the rest of `/api/v1/*`. No bespoke auth.
+- **Dual-attribute DTOs** - Records carry both `System.Text.Json` and `Newtonsoft.Json` camelCase attributes so they serialize identically under either pipeline.
+- **mod.io distribution** - Listing copy + zip-shape in `docs/modio.md`.
 
-### Shell harness (`mod/shell/`)
+## Shell harness (`mod/shell/`)
 
-- **Standalone ASP.NET Core mock server on `:5100`** - Same route, same DTOs (linked via `<Compile Include>`), canned data. Lets the Python app iterate against a real C# HTTP server without booting Eco.
+- **Standalone ASP.NET mock on `:5100`** - Same route, same DTOs (`<Compile Include>`-linked), canned data. Iterate without booting Eco.
 
-### Deploy and ops
+## Deploy and ops
 
-- **Canonical deploy reference for the homelab** - This repo is the reference shape other `coilysiren/*` repos copy from. Dockerfile, Makefile, `deploy/main.yml` (k3s), `.github/workflows/build-and-publish.yml` GHA pipeline.
-- **k3s manifest with ExternalSecrets** - Pulls `SENTRY_DSN` and `UPSTREAM_API_KEY` from AWS SSM via the `aws-parameter-store` ClusterSecretStore.
-- **Image publish** - Builds and pushes to `ghcr.io/coilysiren/eco-spec-tracker/...`, tagged with git SHA.
-- **Tailscale + Traefik + cert-manager rig** - Inherited from the `backend` template. TLS, ingress, and homelab access shape.
-- **`coily eco mod push` distribution path** - Mod DLL is built locally with `make build-mod`, zipped with `Mods/EcoJobsTracker/` prefix, pushed via the coily wrapper, then `coily eco restart` reloads it.
+- **Canonical deploy reference for the homelab** - Other `coilysiren/*` repos copy from here. Dockerfile, Makefile, `deploy/main.yml`, GHA pipeline.
+- **k3s + ExternalSecrets** - Pulls `SENTRY_DSN` + `UPSTREAM_API_KEY` from AWS SSM via `aws-parameter-store` ClusterSecretStore.
+- **Image publish** - Builds + pushes to `ghcr.io/coilysiren/eco-spec-tracker/...`, git-SHA tagged.
+- **Tailscale + Traefik + cert-manager** - Inherited from `backend` template.
+- **`coily eco mod push` path** - `make build-mod`, zip with `Mods/EcoJobsTracker/` prefix, push via coily, `coily eco restart`.
 
-### Dev-loop tooling
+## Dev-loop tooling
 
-- **`make build-native` / `make run-native`** - `uv sync --group dev` and uvicorn `--reload` on `:4100`.
+- **`make build-native` / `run-native`** - `uv sync --group dev`, uvicorn `--reload` on `:4100`.
 - **`make run-shell`** - C# shell harness on `:5100`.
-- **`make build-mod`** - Compiles the production mod DLL.
-- **`make build-docker` / `make deploy`** - Container build/push and k3s rollout.
+- **`make build-mod`** - Production mod DLL.
+- **`make build-docker` / `deploy`** - Container build/push + k3s rollout.
 - **Pre-commit** - ruff + mypy on Python, `dotnet format` on C#.
-- **Smoke test suite** - `tests/test_smoke.py` exercises every page, every JSON endpoint, the eco-card partial (with the upstream Eco `/info` stubbed via respx), and the upstream parser against a mod-shaped fixture. Run via `make test` (or `coily test`).
+- **Smoke suite** - `tests/test_smoke.py` every page, every JSON, eco-card partial (upstream `/info` stubbed via respx), upstream parser fixture.
 
 ## Naming-debt note
 
-Public surface: `eco-jobs-tracker` (GitHub repo, subdomain, C# mod). Internal surface still uses the older `eco-spec-tracker` name (k8s namespace, Python package, Docker image, SSM key, Sentry project). Renaming the internals is a separate, riskier surgery and is intentionally deferred.
-
-## Known open questions
-
-- API-key provisioning shape if the mod ever needs its own token instead of reusing the `eco-mcp-app` admin token.
-- Whether `active` means "online right now" (current behavior, from `user.LoggedIn`) or "logged in within N days" (mock-era boolean).
+Public: `eco-jobs-tracker` (repo, subdomain, mod). Internal still uses older `eco-spec-tracker` (k8s namespace, package, image, SSM key, Sentry). Renaming internals is deferred.
 
 ## See also
 
@@ -68,4 +59,4 @@ Public surface: `eco-jobs-tracker` (GitHub repo, subdomain, C# mod). Internal su
 - [AGENTS.md](../AGENTS.md) - agent-facing operating rules.
 - [.coily/coily.yaml](../.coily/coily.yaml) - allowlisted commands.
 
-Cross-reference convention from [coilysiren/agentic-os-kai#313](https://github.com/coilysiren/agentic-os-kai/issues/313).
+Cross-reference convention from [coilysiren/agentic-os#59](https://github.com/coilysiren/agentic-os/issues/59).

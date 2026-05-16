@@ -1,23 +1,10 @@
 # eco-jobs-tracker
 
-> **Naming.** `eco-jobs-tracker` is the canonical name (GitHub repo, public
-> subdomain `eco-jobs-tracker.coilysiren.me`, and the C# mod `EcoJobsTracker`).
-> The deploy internals - k8s namespace `coilysiren-eco-spec-tracker`, Python
-> package `eco_spec_tracker`, Docker image `coilysiren-eco-spec-tracker`, SSM
-> key `/sentry-dsn/eco-spec-tracker`, and Sentry project - still carry the old
-> name. Renaming those is a separate, riskier surgery (k8s namespace teardown +
-> Sentry project break); GitHub's auto-redirect makes the gap free, so it can
-> wait. **Do not change `config.yml`'s `name` field on its own** - it cascades
-> into every k8s resource name and the image tag at deploy time.
+> **Naming.** `eco-jobs-tracker` is the canonical name (repo, subdomain `eco-jobs-tracker.coilysiren.me`, mod `EcoJobsTracker`). Deploy internals still carry the old `eco-spec-tracker` name (k8s namespace, Python package, image, SSM key, Sentry project). Renaming those is a separate, riskier surgery (k8s teardown + Sentry break). **Do not change `config.yml`'s `name`** - it cascades into every k8s resource and the image tag at deploy.
 
-What it's like to build a read-only "who can make what" board for an **Eco** [1]
-server in 300 lines of FastAPI — a single page that lists every player, every
-profession, every learned specialty, with live `active / total` counts.
+Read-only "who can make what" board for an **Eco** [1] server in 300 lines of FastAPI. Lists every player, profession, learned specialty, with live `active / total` counts.
 
-Paired with a small C# Eco mod that exposes `GET /api/v1/skills`: the mod is
-the source of truth, this app is the view. Today the app still reads mock data
-(`UPSTREAM_URL` unset); point it at the shell harness on `:5100` or the real
-mod on your server and it switches over transparently.
+Paired with a small C# Eco mod that exposes `GET /api/v1/skills`: the mod is the source of truth, this app is the view. Today the app reads mock data (`UPSTREAM_URL` unset); point it at the shell harness on `:5100` or the real mod and it switches over.
 
 ![](https://img.shields.io/badge/python-3.13-3776ab)
 ![](https://img.shields.io/badge/fastapi-0.115+-009688)
@@ -29,51 +16,14 @@ mod on your server and it switches over transparently.
 
 Live at [eco-jobs-tracker.coilysiren.me](https://eco-jobs-tracker.coilysiren.me/).
 
-## What it renders
-
-```
-┌─ eco-jobs-tracker ─────────────────────── ./home ./professions ./specialties ┐
-│  # who_does_what && when_active                                              │
-│                                                                              │
-│  ┌ live eco server card (via eco-mcp-app, same render as the MCP widget) ──┐ │
-│  │  Eco via Sirens · day 2 · HighCollaboration · Slow · ● online           │ │
-│  └─────────────────────────────────────────────────────────────────────────┘ │
-│                                                                              │
-│  Professions                                                                 │
-│    Carpentry       ██████▒▒▒▒  3 / 5 active                                  │
-│    Masonry         █████▒▒▒▒▒  2 / 4 active                                  │
-│    …                                                                         │
-│                                                                              │
-│  Specialties                                                                 │
-│    Basic Carpentry     coilysiren (L5) · ekans (L4) · …                      │
-│    Advanced Masonry    hammerhand (L3) · …                                   │
-│                                                                              │
-│  Players                                                                     │
-│    coilysiren   · active · Carpentry ×3                                      │
-│    ekans        · active · Carpentry, Mining                                 │
-│    …                                                                         │
-└──────────────────────────────────────────────────────────────────────────────┘
-```
-
 ## How it works
 
 Two processes:
 
-1. **FastAPI app** (`src/eco_spec_tracker/main.py`) — Jinja2 + HTMX + Tailwind
-   Play CDN. Serves `/`, `/professions`, `/specialties`, `/players`, HTMX
-   partials under `/partials/*`, and a JSON mirror under `/api/v1/*`. The live
-   Eco server status card at the top is imported directly from the sister
-   `eco-mcp-app` [2] package — same render path as the MCP widget, so visuals
-   stay in lockstep.
-2. **C# Eco mod** (`mod/src/`) — a standard ModKit [3] UserCode mod that
-   registers `GET /api/v1/skills` and returns every player's learned
-   specialties. The `mod/shell/` project is an ASP.NET Core harness that
-   serves the same route with canned data on `:5100`, so you can iterate
-   against a live C# HTTP server without booting Eco.
+1. **FastAPI app** (`src/eco_spec_tracker/main.py`) - Jinja2 + HTMX + Tailwind CDN. Serves `/`, `/professions`, `/specialties`, `/players`, HTMX partials under `/partials/*`, JSON mirror under `/api/v1/*`. The live server-status card imports directly from sibling `eco-mcp-app` [2].
+2. **C# Eco mod** (`mod/src/`) - standard ModKit [3] UserCode mod, registers `GET /api/v1/skills`. The `mod/shell/` project is an ASP.NET Core harness on `:5100` with canned data so you can iterate without booting Eco.
 
-The Python app's `upstream.py` module calls the `/api/v1/skills` endpoint when
-`UPSTREAM_URL` is set and falls back to in-repo mock data otherwise — so the
-web UI is always useful, even offline.
+`upstream.py` calls `/api/v1/skills` when `UPSTREAM_URL` is set, falls back to mock data otherwise.
 
 ## Quick start
 
@@ -82,7 +32,7 @@ make build-native
 make run-native      # http://localhost:4100 with autoreload
 ```
 
-With the C# shell harness also running (in a second terminal):
+Plus the C# shell harness in a second terminal:
 
 ```sh
 make run-shell                                     # :5100
@@ -92,13 +42,10 @@ UPSTREAM_URL=http://localhost:5100/api/v1/skills make run-native
 ## Tests
 
 ```sh
-make test            # or: coily test
+make test
 ```
 
-Smoke suite under `tests/test_smoke.py`: every page, every `/api/v1/*`, the
-`/partials/eco-card` render with the upstream Eco `/info` stubbed via
-[respx](https://lundberg.github.io/respx/), and the upstream parser fed a
-mod-shaped fixture.
+Smoke suite under `tests/test_smoke.py`: every page, every `/api/v1/*`, `/partials/eco-card` with upstream stubbed via [respx](https://lundberg.github.io/respx/), parser fed a mod-shaped fixture.
 
 ## Build the real mod
 
@@ -110,32 +57,15 @@ Drops into an Eco server's `Mods/EcoJobsTracker/` directory.
 
 ## Publishing to mod.io
 
-See [`docs/modio.md`](docs/modio.md) for the canonical mod.io listing copy
-(name, summary, description, tags, logo path) and the distribution zip
-shape. Bump `<Version>` in [`mod/src/EcoJobsTracker.csproj`](mod/src/EcoJobsTracker.csproj)
-before each upload.
+See [`docs/modio.md`](docs/modio.md) for the canonical listing copy + zip shape. Bump `<Version>` in [`mod/src/EcoJobsTracker.csproj`](mod/src/EcoJobsTracker.csproj) before each upload.
 
 ## Deploy
 
-Follows the `coilysiren/backend` template [4] — Dockerfile, Makefile, k3s
-manifest in `deploy/main.yml`, GitHub Actions in `.github/workflows/`. Target:
-`eco-jobs-tracker.coilysiren.me`.
-
-## See also
-
-- [eco-mcp-app](https://github.com/coilysiren/eco-mcp-app) — sister repo, the
-  inline Claude Desktop widget that renders the Eco server status card. This
-  repo imports it directly as a git dep so the card stays in lockstep.
-- [coilysiren/backend](https://github.com/coilysiren/backend) — canonical
-  deploy template.
-- [StrangeLoopGames/EcoModKit](https://github.com/StrangeLoopGames/EcoModKit) —
-  the Eco modding API surface the C# side uses.
-- [Eco modding docs](https://docs.play.eco/) and the [Eco wiki](https://wiki.play.eco/en/Modding).
+Follows the `coilysiren/backend` template [4]. Target: `eco-jobs-tracker.coilysiren.me`.
 
 ## License & credits
 
-MIT. Eco is a trademark of **Strange Loop Games** [5]; this project is an
-unofficial fan tool and is not affiliated with StrangeLoopGames.
+MIT. Eco is a trademark of **Strange Loop Games** [5]; unofficial fan tool, not affiliated.
 
 ## References
 
@@ -145,14 +75,10 @@ unofficial fan tool and is not affiliated with StrangeLoopGames.
 4. <https://github.com/coilysiren/backend>
 5. <https://www.strangeloopgames.com/>
 
-## Commands
-
-Dev commands are declared in [`.coily/coily.yaml`](.coily/coily.yaml). Run them as `coily exec <verb>`.
-
 ## See also
 
 - [AGENTS.md](AGENTS.md) - agent-facing operating rules.
 - [docs/FEATURES.md](docs/FEATURES.md) - inventory of what ships today.
-- [.coily/coily.yaml](.coily/coily.yaml) - allowlisted commands. Agents route through coily, not bare `make` / `uv` / `python` / `npm` / `cargo` / `dotnet`.
+- [.coily/coily.yaml](.coily/coily.yaml) - allowlisted commands.
 
-Cross-reference convention from [coilysiren/agentic-os-kai#313](https://github.com/coilysiren/agentic-os-kai/issues/313).
+Cross-reference convention from [coilysiren/agentic-os#59](https://github.com/coilysiren/agentic-os/issues/59).
